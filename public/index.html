@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SIA 101 Timetable System</title>
+</head>
+
+<body>
+
+<h1>📅 SIA 101 Timetable</h1>
+
+<button onclick="loadAll()">View All Schedule</button>
+<button onclick="loadToday()">Today</button>
+
+<select id="day" onchange="filterDay()">
+  <option value="">Filter by Day</option>
+  <option>Monday</option>
+  <option>Tuesday</option>
+  <option>Wednesday</option>
+</select>
+
+<input id="search" placeholder="Search subject">
+<button onclick="search()">Search</button>
+
+<div id="output"></div>
+
+<h2>Add Schedule</h2>
+
+<input id="subject" placeholder="Subject">
+<input id="teacher" placeholder="Teacher">
+<input id="dayInput" placeholder="Day">
+<input id="start" placeholder="Start Time">
+<input id="end" placeholder="End Time">
+<input id="room" placeholder="Room">
+
+<button onclick="addSchedule()">Add</button>
+
+<script>
+const API = "/schedule";
+
+// LOAD ALL
+async function loadAll() {
+  const res = await fetch(API);
+  const data = await res.json();
+  render(data);
+}
+
+// FILTER DAY
+async function filterDay() {
+  const day = document.getElementById("day").value;
+  if (!day) return;
+
+  const res = await fetch(`${API}/day/${day}`);
+  const data = await res.json();
+  render(data);
+}
+
+// SEARCH
+async function search() {
+  const q = document.getElementById("search").value;
+  const res = await fetch(`${API}/search?subject=${q}`);
+  const data = await res.json();
+  render(data);
+}
+
+// TODAY
+async function loadToday() {
+  const res = await fetch(`${API}/today`);
+  const data = await res.json();
+  render(data);
+}
+
+// ADD
+async function addSchedule() {
+  const body = {
+    subject: subject.value,
+    teacher: teacher.value,
+    day: dayInput.value,
+    startTime: start.value,
+    endTime: end.value,
+    room: room.value
+  };
+
+  await fetch(API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  loadAll();
+}
+
+// RENDER
+function render(data) {
+  const div = document.getElementById("output");
+  div.innerHTML = "";
+
+  data.forEach(s => {
+    div.innerHTML += `
+      <p>
+        <b>${s.subject}</b><br>
+        ${s.teacher} | ${s.day}<br>
+        ${s.startTime} - ${s.endTime} | Room: ${s.room}
+      </p>
+      <hr>
+    `;
+  });
+}
+</script>
+
+</body>
+</html>
