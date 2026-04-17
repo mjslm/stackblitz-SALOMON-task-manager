@@ -17,143 +17,80 @@ app.get("/", (req, res) => {
 });
 
 // =====================
-// DATASET (YOUR TIMETABLE)
+// SIMPLE DATA
 // =====================
 let schedule = [
   {
     id: 1,
-    subject: "SIA 101",
-    teacher: "Mr. Nathaniel",
-    day: "Monday",
-    startTime: "08:00",
-    endTime: "09:30",
-    room: "A204"
-  },
-  {
-    id: 2,
-    subject: "PF 102",
-    teacher: "Ms. Llyod",
-    day: "Monday",
-    startTime: "10:00",
-    endTime: "11:30",
-    room: "A202"
-  },
-  {
-    id: 3,
-    subject: "GEC 12",
-    teacher: "Mrs. Vilma",
-    day: "Tuesday",
-    startTime: "08:00",
-    endTime: "09:30",
-    room: "E202"
-  },
-  {
-    id: 4,
-    subject: "GEC 9",
-    teacher: "Mr. Noel",
-    day: "Wednesday",
-    startTime: "10:00",
-    endTime: "11:00",
-    room: "Virtual Class"
+    subjectName: "SIA 101",
+    instructorName: "Mr. Nathaniel",
+    room: "A204",
+    startTime: "08:00 AM",
+    endTime: "09:30 AM",
+    day: "Monday"
   }
 ];
 
-let currentId = 5;
-
 // =====================
-// CRUD OPERATIONS
+// CREATE - POST
 // =====================
-
-// GET ALL
-app.get("/schedule", (req, res) => {
-  res.json(schedule);
-});
-
-// GET BY ID
-app.get("/schedule/:id", (req, res) => {
-  const item = schedule.find(s => s.id == req.params.id);
-  if (!item) return res.status(404).json({ message: "Not found" });
-  res.json(item);
-});
-
-// CREATE
 app.post("/schedule", (req, res) => {
-  const { subject, teacher, day, startTime, endTime, room } = req.body;
-
-  if (!subject || !teacher || !day || !startTime || !endTime || !room) {
-    return res.status(400).json({ message: "Missing fields" });
-  }
-
   const newItem = {
-    id: currentId++,
-    subject,
-    teacher,
-    day,
-    startTime,
-    endTime,
-    room
+    id: schedule.length + 1,
+    subjectName: req.body.subjectName,
+    instructorName: req.body.instructorName,
+    room: req.body.room,
+    startTime: req.body.startTime,
+    endTime: req.body.endTime,
+    day: req.body.day
   };
 
   schedule.push(newItem);
   res.status(201).json(newItem);
 });
 
-// UPDATE
-app.put("/schedule/:id", (req, res) => {
+// =====================
+// READ - GET ALL
+// =====================
+app.get("/schedule", (req, res) => {
+  res.json(schedule);
+});
+
+// =====================
+// READ - GET BY ID
+// =====================
+app.get("/schedule/:id", (req, res) => {
   const item = schedule.find(s => s.id == req.params.id);
   if (!item) return res.status(404).json({ message: "Not found" });
-
-  Object.assign(item, req.body);
   res.json(item);
 });
 
-// DELETE
+// =====================
+// UPDATE - PUT
+// =====================
+app.put("/schedule/:id", (req, res) => {
+  const item = schedule.find(s => s.id == req.params.id);
+
+  if (!item) {
+    return res.status(404).json({ message: "Not found" });
+  }
+
+  item.subjectName = req.body.subjectName || item.subjectName;
+  item.instructorName = req.body.instructorName || item.instructorName;
+  item.room = req.body.room || item.room;
+  item.startTime = req.body.startTime || item.startTime;
+  item.endTime = req.body.endTime || item.endTime;
+  item.day = req.body.day || item.day;
+
+  res.json(item);
+});
+
+// =====================
+// DELETE - DELETE
+// =====================
 app.delete("/schedule/:id", (req, res) => {
-  const index = schedule.findIndex(s => s.id == req.params.id);
-  if (index === -1) return res.status(404).json({ message: "Not found" });
-
-  const deleted = schedule.splice(index, 1);
-  res.json(deleted);
-});
-
-// =====================
-// EXTRA ENDPOINTS (REQUIRED 10+)
-// =====================
-
-// filter by day
-app.get("/schedule/day/:day", (req, res) => {
-  res.json(schedule.filter(s => s.day.toLowerCase() === req.params.day.toLowerCase()));
-});
-
-// search
-app.get("/schedule/search", (req, res) => {
-  const q = (req.query.subject || "").toLowerCase();
-  res.json(schedule.filter(s => s.subject.toLowerCase().includes(q)));
-});
-
-// room filter
-app.get("/schedule/room/:room", (req, res) => {
-  res.json(schedule.filter(s => s.room.toLowerCase() === req.params.room.toLowerCase()));
-});
-
-// today schedule
-app.get("/schedule/today", (req, res) => {
-  const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-  const today = days[new Date().getDay()];
-  res.json(schedule.filter(s => s.day === today));
-});
-
-// stats
-app.get("/schedule/stats", (req, res) => {
-  const stats = {};
-  schedule.forEach(s => {
-    stats[s.day] = (stats[s.day] || 0) + 1;
-  });
-
-  res.json({
-    total: schedule.length,
-    perDay: stats
-  });
+  schedule = schedule.filter(s => s.id != req.params.id);
+  res.json({ message: "Deleted successfully" });
 });
 
 // =====================

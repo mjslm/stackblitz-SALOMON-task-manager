@@ -1,109 +1,114 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SIA 101 Timetable System</title>
+  <title>Timetable CRUD</title>
 </head>
-
 <body>
 
-<h1>📅 SIA 101 Timetable</h1>
+<h1>📅 Timetable</h1>
 
-<button onclick="loadAll()">View All Schedule</button>
-<button onclick="loadToday()">Today</button>
-
-<select id="day" onchange="filterDay()">
-  <option value="">Filter by Day</option>
-  <option>Monday</option>
-  <option>Tuesday</option>
-  <option>Wednesday</option>
-</select>
-
-<input id="search" placeholder="Search subject">
-<button onclick="search()">Search</button>
+<button onclick="loadSchedule()">View All</button>
 
 <div id="output"></div>
 
 <h2>Add Schedule</h2>
 
-<input id="subject" placeholder="Subject">
-<input id="teacher" placeholder="Teacher">
-<input id="dayInput" placeholder="Day">
-<input id="start" placeholder="Start Time">
-<input id="end" placeholder="End Time">
+<input id="subjectName" placeholder="Subject Name">
+<input id="instructorName" placeholder="Instructor Name">
 <input id="room" placeholder="Room">
+<input id="startTime" placeholder="Start Time">
+<input id="endTime" placeholder="End Time">
+<input id="day" placeholder="Day">
 
 <button onclick="addSchedule()">Add</button>
 
 <script>
 const API = "/schedule";
 
-// LOAD ALL
-async function loadAll() {
+// =====================
+// READ
+// =====================
+async function loadSchedule() {
   const res = await fetch(API);
   const data = await res.json();
-  render(data);
-}
 
-// FILTER DAY
-async function filterDay() {
-  const day = document.getElementById("day").value;
-  if (!day) return;
-
-  const res = await fetch(`${API}/day/${day}`);
-  const data = await res.json();
-  render(data);
-}
-
-// SEARCH
-async function search() {
-  const q = document.getElementById("search").value;
-  const res = await fetch(`${API}/search?subject=${q}`);
-  const data = await res.json();
-  render(data);
-}
-
-// TODAY
-async function loadToday() {
-  const res = await fetch(`${API}/today`);
-  const data = await res.json();
-  render(data);
-}
-
-// ADD
-async function addSchedule() {
-  const body = {
-    subject: subject.value,
-    teacher: teacher.value,
-    day: dayInput.value,
-    startTime: start.value,
-    endTime: end.value,
-    room: room.value
-  };
-
-  await fetch(API, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-
-  loadAll();
-}
-
-// RENDER
-function render(data) {
-  const div = document.getElementById("output");
-  div.innerHTML = "";
+  let html = "";
 
   data.forEach(s => {
-    div.innerHTML += `
+    html += `
       <p>
-        <b>${s.subject}</b><br>
-        ${s.teacher} | ${s.day}<br>
-        ${s.startTime} - ${s.endTime} | Room: ${s.room}
+        <b>${s.subjectName}</b><br>
+        Instructor: ${s.instructorName}<br>
+        Room: ${s.room}<br>
+        ${s.startTime} - ${s.endTime}<br>
+        Day: ${s.day}<br>
+
+        <button onclick="deleteSchedule(${s.id})">Delete</button>
+        <button onclick="editSchedule(${s.id})">Edit</button>
       </p>
       <hr>
     `;
   });
+
+  document.getElementById("output").innerHTML = html;
+}
+
+// =====================
+// CREATE
+// =====================
+async function addSchedule() {
+  await fetch(API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      subjectName: subjectName.value,
+      instructorName: instructorName.value,
+      room: room.value,
+      startTime: startTime.value,
+      endTime: endTime.value,
+      day: day.value
+    })
+  });
+
+  loadSchedule();
+}
+
+// =====================
+// DELETE
+// =====================
+async function deleteSchedule(id) {
+  await fetch(`${API}/${id}`, {
+    method: "DELETE"
+  });
+
+  loadSchedule();
+}
+
+// =====================
+// UPDATE (simple prompt version)
+// =====================
+async function editSchedule(id) {
+  const subjectName = prompt("New Subject Name:");
+  const instructorName = prompt("New Instructor Name:");
+  const room = prompt("New Room:");
+  const startTime = prompt("New Start Time:");
+  const endTime = prompt("New End Time:");
+  const day = prompt("New Day:");
+
+  await fetch(`${API}/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      subjectName,
+      instructorName,
+      room,
+      startTime,
+      endTime,
+      day
+    })
+  });
+
+  loadSchedule();
 }
 </script>
 
